@@ -9,7 +9,8 @@ export default function ClientSliderService() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const url = `https://app.nocodb.com/api/v2/tables/${tableId}/records`;
+      const url = `https://app.nocodb.com/api/v2/tables/${tableId}/records?limit=100`;
+
       try {
         const res = await axios.get(url, {
           headers: { Authorization: `Bearer ${token}` },
@@ -24,13 +25,8 @@ export default function ClientSliderService() {
         }
 
         const formatted = list.map((row) => {
-          // defensive extraction of name
           const name = row?.logoname || row?.name || "client";
 
-          // row.logoImage can be:
-          // - an array of file objects: [{ signedUrl: '...', url: '...' }, ...]
-          // - a single object: { signedUrl: '...' }
-          // - sometimes a string (rare)
           let logo = "";
 
           if (Array.isArray(row?.logoImage) && row.logoImage.length > 0) {
@@ -49,8 +45,24 @@ export default function ClientSliderService() {
           };
         });
 
-        console.log("✨ Formatted logos:", formatted);
-        setLogos(formatted);
+        // 🚀 Remove empty logos
+        const filtered = formatted.filter((item) => item.logo);
+
+        // 🚀 Remove duplicates (logo + name)
+        const uniqueLogos = [];
+        const seen = new Set();
+
+        filtered.forEach((item) => {
+          const key = item.logo + item.name;
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueLogos.push(item);
+          }
+        });
+
+        console.log("✨ Unique logos:", uniqueLogos);
+
+        setLogos(uniqueLogos);
       } catch (error) {
         console.error("❌ Failed to fetch logos:", error);
       }
@@ -59,9 +71,7 @@ export default function ClientSliderService() {
     fetchData();
   }, [tableId, token]);
 
-  // Duplicate for marquee effect
-  const extendedCompanies = [...logos, ...logos];
-
+  const extendedCompanies = logos;
   return (
     <div className="w-full bg-[#010616] py-16 overflow-hidden">
       <div className="max-w-6xl mx-auto px-2">
@@ -80,7 +90,6 @@ export default function ClientSliderService() {
                       alt={`${company.name} logo`}
                       className="h-12 w-auto object-contain opacity-80 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0"
                       onError={(e) => {
-                        // hide broken images
                         e.currentTarget.style.display = "none";
                       }}
                     />
@@ -106,7 +115,6 @@ export default function ClientSliderService() {
           display: flex;
           gap: 2rem;
           flex-wrap: wrap;
-          
         }
 
         .logo-item {
