@@ -186,7 +186,7 @@ export default function TestimonialSlider() {
   const currentTestimonial = testimonials[currentSlide];
 
   return (
-    <div className="bg-gradient-to-r from-[#03051E] via-[#0e1f4b] to-[#1D53B7] ">
+    <div id="testBox" className="bg-gradient-to-r from-[#03051E] via-[#0e1f4b] to-[#1D53B7] ">
       <div className=" max-w-6xl mx-auto relative z-10 container min-h-[80vh] lg:min-h-[80vh] flex flex-col justify-center">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center min-h-[80vh]">
           {/* Trust Section - Left Side */}
@@ -232,8 +232,8 @@ export default function TestimonialSlider() {
           </div>
 
           {/* Testimonial Section - Right Side */}
-          <div className="relative order-1 lg:order-2">
-            <div className="relative bg-white/10 backdrop-blur-lg rounded-3xl p-8 lg:p-12 border border-white/20 shadow-2xl">
+          <div id="testBox" className="relative order-1 lg:order-2">
+            <div  className="relative bg-white/10 backdrop-blur-lg rounded-3xl p-8 lg:p-12 border border-white/20 shadow-2xl">
               {/* Quote */}
               <div className="space-y-6 text-white">
                 <blockquote className="text-xl lg:text-2xl xl:text-3xl font-light italic leading-relaxed">

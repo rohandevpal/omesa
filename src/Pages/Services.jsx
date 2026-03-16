@@ -1,6 +1,7 @@
 
-import ClientSlider from '../Components/ClientsSlider';
+// import ClientSlider from '../Components/ClientsSlider';
 import ServicesSection from '../Components/ServicesSection'
+import ClientSliderService from '../Components/ClientSliderService';
 
 
 const Services = () => {
@@ -38,7 +39,7 @@ const Services = () => {
          <ServicesSection></ServicesSection>
         </div>
         <div>
-          <ClientSlider></ClientSlider>
+          <ClientSliderService></ClientSliderService>
         </div>
         {/* <AwardsSection></AwardsSection> */}
     </div>

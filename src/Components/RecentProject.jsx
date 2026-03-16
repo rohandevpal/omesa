@@ -1,41 +1,145 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAirtable } from "../Context/AirTableContext";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import axios from "axios";
 
-export default function RecentProjects() {
-  const { getTableData } = useAirtable();
+export default function RecentProjects({ limit }) {
   const [projects, setProjects] = useState([]);
+  const visibleProjects = limit ? projects.slice(0, limit) : projects;
+  // env / constants
+  const NOCODB_TOKEN = import.meta.env.VITE_NOCODB_ACCESS_TOKEN; // will be used as xc-token
+  const TABLE_ID = "mebdphs2dx4f1m3"; // keep as-is or move to env
+  const API_BASE = import.meta.env.VITE_NOCODB_API_BASE || "https://app.nocodb.com/api/v2";
 
-  // Fetch Data
+  // optional: viewId from your earlier test (replace if needed)
+  const VIEW_ID = "vwob5yjkd7yexr3m";
+  const LIMIT = 100;
+
+  // Helper: extract only signed URL (top-level -> thumbnails.card_cover -> thumbnails.small -> thumbnails.tiny)
+  const imageSrcFor = (attachment) => {
+    if (!attachment || typeof attachment !== "object") return null;
+
+    const topSigned = attachment.signedUrl || attachment.signed_url || attachment.signedURL || null;
+    if (topSigned) return topSigned;
+
+    const thumbs = attachment.thumbnails || attachment.Thumbnails || null;
+    if (thumbs) {
+      return (
+        thumbs.card_cover?.signedUrl ||
+        thumbs.card_cover?.signed_url ||
+        thumbs.small?.signedUrl ||
+        thumbs.small?.signed_url ||
+        thumbs.tiny?.signedUrl ||
+        thumbs.tiny?.signed_url ||
+        null
+      );
+    }
+
+    return null;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getTableData("portfolioTiles");
+      if (!NOCODB_TOKEN || !TABLE_ID) {
+        console.error(
+          "⚠️ Missing NocoDB config. Set VITE_NOCODB_ACCESS_TOKEN and (optionally) VITE_NOCODB_TABLE_ID in .env"
+        );
+        return;
+      }
 
-      // Airtable se jo data aata hai usko fields ke saath format karo
-      const formatted = data.map((record) => ({
-        id: record.id,
-        ...record.fields
-      }));
+      const url = `${API_BASE}/tables/${TABLE_ID}/records`;
 
-      // Date ke hisaab se sort (newest first)
-      const sorted = formatted.sort(
-        (a, b) => new Date(b.Date) - new Date(a.Date)
-      );
+      const options = {
+        method: "GET",
+        url,
+        params: {
+          offset: "0",
+          limit: String(LIMIT),
+          where: "",
+          viewId: VIEW_ID,
+        },
+        headers: {
+          "xc-token": NOCODB_TOKEN,
+          "Content-Type": "application/json",
+        },
+      };
 
-      setProjects(sorted);
-      console.log("fetched & sorted project details", sorted);
+      try {
+        const res = await axios.request(options);
+
+        console.log("🔍 Raw NocoDB response:", res.data);
+
+        const list = res?.data?.list;
+        if (!list || !Array.isArray(list)) {
+          console.error("⚠️ 'list' missing or not an array:", res.data);
+          return;
+        }
+
+        const formatted = list.map((row) => {
+          const title = row?.Title || row?.title || row?.name || "Untitled";
+          const category = row?.category || row?.Category || "";
+          const description = row?.LongDescription || row?.description || row?.Description || row?.desc || "";
+          const dateField = row?.date || row?.Date || null;
+
+          // Where attachments may be: images, Images, attachments...
+          const candidates =
+            row?.images || row?.Images || row?.image || row?.Image || row?.attachments || row?.Attachments || null;
+
+          let Images = [];
+          if (Array.isArray(candidates) && candidates.length > 0) {
+            Images = candidates
+              .map((att) => {
+                const signed = imageSrcFor(att);
+                if (!signed) return null; // IGNORE attachments without signedUrl
+                return { url: signed, raw: att };
+              })
+              .filter(Boolean);
+          } else if (candidates && typeof candidates === "object") {
+            const signed = imageSrcFor(candidates);
+            if (signed) Images = [{ url: signed, raw: candidates }];
+          }
+
+          // LOG signedUrls for debugging
+          if (Images.length > 0) {
+            console.log(`Record ${row?.Id || row?.id} signed image urls:`, Images.map((i) => i.url));
+          } else {
+            console.log(`Record ${row?.Id || row?.id} → no signed image found`);
+          }
+
+          return {
+            id: row?.Id ?? row?.id ?? Math.random().toString(36).slice(2, 9),
+            title,
+            category,
+            description,
+            date: dateField,
+            Images,
+            raw: row,
+          };
+        });
+
+        // sort by date (newest first)
+        const sorted = formatted.sort((a, b) => {
+          const ta = a.date ? new Date(a.date).getTime() : 0;
+          const tb = b.date ? new Date(b.date).getTime() : 0;
+          return tb - ta;
+        });
+
+        setProjects(sorted);
+        console.log("✨ Formatted & sorted projects:", sorted);
+      } catch (error) {
+        console.error("❌ Failed to fetch NocoDB records:", error);
+      }
     };
 
     fetchData();
-  }, [getTableData]);
+  }, [NOCODB_TOKEN, TABLE_ID, API_BASE]);
 
   // AOS Init
   useEffect(() => {
     AOS.init({
-      duration: 1000, // animation speed
-      once: true // animation only once
+      duration: 1000,
+      once: true,
     });
   }, []);
 
@@ -63,7 +167,9 @@ export default function RecentProjects() {
         {/* Projects Grid */}
         <div className="max-w-full mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-            {projects.map((project, index) => (
+       
+          {visibleProjects.map((project, index) => (
+
               <div
                 data-aos="fade-up"
                 data-aos-delay={index * 150}
@@ -90,7 +196,7 @@ export default function RecentProjects() {
   );
 }
 
-// Card Component
+// Card Component (unchanged, uses signedUrl stored in Images.url)
 export function ProjectCard({ project, index }) {
   const [isHovered, setIsHovered] = useState(false);
   const isOffset = index % 2 === 0;
@@ -98,7 +204,8 @@ export function ProjectCard({ project, index }) {
   const offsetClass = isOffset ? "mt-12 lg:mt-10" : "";
 
   const { title, category, description, Images } = project;
-  const imageUrl = Images?.[0]?.url || "/placeholder.svg";
+  const firstImage = Images?.[0];
+  const imageUrl = firstImage?.url || "/placeholder.svg";
 
   return (
     <div
@@ -111,6 +218,9 @@ export function ProjectCard({ project, index }) {
           src={imageUrl}
           alt={title}
           className="w-full h-64 sm:h-80 lg:h-full object-cover block"
+          onError={(e) => {
+            e.currentTarget.src = "/placeholder.svg";
+          }}
         />
 
         {/* Hover Overlay */}

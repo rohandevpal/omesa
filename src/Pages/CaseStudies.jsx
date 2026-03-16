@@ -1,117 +1,140 @@
-
-import { useAirtable } from "../Context/AirTableContext";
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
-
-
-export default function CaseStudies() {
-
-    const { getTableData } = useAirtable();
-  const [CaseStudy, SetCaseStudy] = useState([]);
-
-  // fetching CaseStudies airtable data
-  useEffect(() => {
-    const fetchData = async () => {
-      const data = await getTableData("caseStudy");
-      SetCaseStudy(data);
-      console.log("fetched CaseStudies details", data);
-    };
-
-    fetchData();
-  }, [getTableData]);
-  console.log("updated CaseStudies",CaseStudy)
-
-  
-  const leftColumnStudies = CaseStudy.filter((study) => study.fields.Position ==="left")
-  console.log("left col",leftColumnStudies)
-  
-  const rightColumnStudies = CaseStudy.filter((study) => study.fields.Position === "right")
-console.log("right col",rightColumnStudies)
-
+/* ================= IMAGE MODAL ================= */
+const ImageModal = ({ image, onClose }) => {
+  if (!image) return null;
 
   return (
-    <div className="min-h-screen bg-[#010616]">
-      <div className="container mx-auto px-4 py-12 max-w-6xl mt-20">
-      
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          {/* LEFT COLUMN */}
-          <div className="space-y-8">
-            {leftColumnStudies.map((study) => (
-              <div
-                key={study.fields.id}
-                className="overflow-hidden border-0 shadow-lg   cursor-pointer group h-fit bg-white rounded-lg"
-              >
-                <div className="relative h-64 overflow-hidden">
-                  <img
-                    src={study.fields.image || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"}
-                    alt={study.fields.imageAlt}
-                    className="object-cover w-full h-full "
-                  />
-                </div>
-                <div className="p-6 h-56 flex flex-col justify-between">
-                  <div>
-                    <h3 className="text-gray-800 text-fs-24 font-[HeadingText]leading-relaxed mb-4 line-clamp-3"> {study.fields.Title}</h3>
-                    <p className="text-gray-800 text-lg font-[textFont] leading-relaxed mb-4 line-clamp-3">
-                      {study.fields.shortDesc}
-                    </p>
-                  </div>
-                  <Link
-                    to={`/case-studies/${study.id}`}
-                    className="flex items-center text-green-600 text-sm font-medium transition-transform duration-200 group-hover:translate-x-2 mt-auto"
-                  >
-                    READ MORE
-                    <i className="fas fa-arrow-right ml-2 text-xs group-hover:translate-x-1 transition-transform duration-200"></i>
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
+    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
+      <button
+        onClick={onClose}
+        className="absolute top-6 right-6 text-white text-3xl font-[textFont]"
+      >
+        ✕
+      </button>
 
-          {/* RIGHT COLUMN */}
-          <div className="space-y-8">
-            {rightColumnStudies.map((study) => (
-              <div
-                key={study.fields.id}
-                className={`overflow-hidden border-0 shadow-lg   cursor-pointer group h-fit bg-white rounded-lg  ${study.fields.backgroundColor || ""} ${study.textColor || ""}`}
-              >
-                <div className="p-6 h-56 flex flex-col justify-between">
-                  <div>
-                     <h3 className="text-gray-800 text-fs-24 font-[HeadingText]leading-relaxed mb-4 line-clamp-3"> {study.fields.Title}</h3>
-                    <p
-                      className={`text-lg font-[textFont] leading-relaxed mb-4 transition-colors duration-200 line-clamp-3 ${
-                        study.textColor === "text-white"
-                          ? "text-gray-300 group-hover:text-gray-200"
-                          : "text-gray-600"
-                      }`}
+      <img
+        src={image}
+        alt="Preview"
+        className="max-w-[90%] max-h-[90%] rounded-lg shadow-xl"
+      />
+    </div>
+  );
+};
+
+/* ================= MAIN COMPONENT ================= */
+export default function CaseStudies() {
+  const [caseStudies, setCaseStudies] = useState([]);
+  const [previewImage, setPreviewImage] = useState(null);
+
+  const token = import.meta.env.VITE_NOCODB_ACCESS_TOKEN;
+
+  /* ---------- helper: signed url ---------- */
+  const signedUrlFor = (att) => {
+    if (!att || typeof att !== "object") return null;
+
+    return (
+      att.signedUrl ||
+      att.signed_url ||
+      att.thumbnails?.card_cover?.signedUrl ||
+      att.thumbnails?.small?.signedUrl ||
+      att.thumbnails?.tiny?.signedUrl ||
+      null
+    );
+  };
+
+  /* ---------- fetch data ---------- */
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await axios.get(
+          "https://app.nocodb.com/api/v2/tables/mnw2o8jh7xtlid3/records",
+          {
+            headers: {
+              "xc-token": token,
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const list = res.data?.list || [];
+
+        const formatted = list.map((item) => {
+          const rawImages = item.image || item.images || [];
+
+          return {
+            id: item.Id,
+            title: item.Title,
+            shortDesc: item.shortDesc,
+            image:
+              Array.isArray(rawImages) && rawImages.length > 0
+                ? signedUrlFor(rawImages[0])
+                : null,
+          };
+        });
+
+        setCaseStudies(formatted);
+      } catch (err) {
+        console.error("❌ CaseStudies error:", err);
+      }
+    };
+
+    if (token) fetchData();
+  }, [token]);
+
+  return (
+    <section className="bg-[#010616] min-h-screen pt-32 pb-32 mt-32">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+          {caseStudies.map((study, index) => (
+            <div
+              key={study.id}
+              className={`group cursor-pointer ${
+                index % 2 === 0
+                 ? "mt-12 lg:mt-1"
+                          : "mt-0 lg:-mt-16"
+              }`}
+            >
+              {/* IMAGE CARD */}
+              <div className="relative rounded-2xl overflow-hidden">
+                <img
+                  src={study.image || "/placeholder.svg"}
+                  alt={study.title}
+                  className="w-full h-72 sm:h-80 lg:h-[420px] object-cover"
+                />
+
+                {/* Hover Overlay */}
+                <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-6">
+                  <h3 className="text-white text-xl font-[heading] mb-2">
+                    {study.title}
+                  </h3>
+
+                  <p className="text-gray-300 text-sm mb-4 line-clamp-3 font-[textFont]">
+                    {study.shortDesc}
+                  </p>
+
+                  <div className="flex justify-end">
+                    <Link
+                      to={`/case-studies/${study.id}`}
+                      className="w-14 h-14 border border-white/40 rounded-full flex items-center justify-center text-white"
                     >
-                      {study.fields.shortDesc}
-                    </p>
+                      <i className="fa-solid fa-arrow-right"></i>
+                    </Link>
                   </div>
-                  <a
-                    href={`/case-studies/${study.id}`}
-                    className={`flex items-center text-sm font-medium mt-auto ${
-                      study.textColor === "text-white"
-                        ? "text-blue-400 group-hover:text-blue-300"
-                        : "text-green-600"
-                    }`}
-                  >
-                    READ MORE
-                    <i className="fas fa-arrow-right ml-2 text-xs group-hover:translate-x-1 transition-transform duration-200"></i>
-                  </a>
-                </div>
-                <div className="relative h-64 overflow-hidden">
-                  <img
-                    src={study.fields.image || "https://images.unsplash.com/photo-1523580494863-6f3031224c94?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"}
-                    alt={study.fields.imageAlt}
-                    className="object-cover w-full h-full"
-                  />
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
-    </div>
-  )
+
+      {/* IMAGE MODAL */}
+      <ImageModal
+        image={previewImage}
+        onClose={() => setPreviewImage(null)}
+      />
+    </section>
+  );
 }

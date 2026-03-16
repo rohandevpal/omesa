@@ -6,31 +6,43 @@ import { StatItem } from "./StateItems";
 export default function AboutSection() {
   const [shouldAnimateStats, setShouldAnimateStats] = useState(false);
   const statsRef = useRef(null);
-  const [Data, setData] = useState([]);
+  const [Data, setData] = useState({});
 
-  const baseId = import.meta.env.VITE_AIRTABLE_BASEID;
-  const tableName = import.meta.env.VITE_AIRTABLE_TABLE_NAME;
-  const token = import.meta.env.VITE_AIRTABLE_ACCESS_TOKEN;
+  // env vars (NocoDB ke liye set karo)
+  const token = import.meta.env.VITE_NOCODB_ACCESS_TOKEN;
+  
 
   useEffect(() => {
     const fetchData = async () => {
-      const url = `https://api.airtable.com/v0/${baseId}/${tableName}`;
+      const url = `https://app.nocodb.com/api/v2/tables/mhfs6tkzwqmi3jk/records`;
+
       try {
         const res = await axios.get(url, {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
-        setData(res.data.records[1]?.fields);
-      
+
+        // ✅ Response ko console par print karo
+
+        console.log("NocoDB API Response:", res.data.list);
+        // const dataFinalAbout = res.data.list;
+        // console.log(dataFinalAbout);
+
+        // Agar list exist karti hai to pehli row ko state me set karo
+        if (res.data.list && res.data.list.length > 0) {
+          setData(res.data.list[0]);
+
+        }
       } catch (error) {
-        console.error("Error fetching from Airtable:", error);
+        console.error("Error fetching from NocoDB:", error);
       }
     };
-    fetchData();
-  }, [baseId, tableName, token]);
 
-  // animation use Effect
+    fetchData();
+  }, [token]);
+
+  // animation useEffect
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -42,7 +54,7 @@ export default function AboutSection() {
       },
       {
         threshold: 0.3,
-        rootMargin: "0px 0px -50px 0px"
+        rootMargin: "0px 0px -50px 0px",
       }
     );
 
@@ -64,20 +76,15 @@ export default function AboutSection() {
             </span>
           </div>
 
-          <div className="md:w-2/3">
-            {/* Airtable Title & Description */}
-
+          <div className="md:w-2/2">
+            {/* NocoDB Title & Description */}
             <div className="p-8">
               <h2 className="text-2xl sm:text-3xl lg:text-fs-58 font-[heading] font-semibold leading-normal mb-6 bg-gradient-to-r from-gray-500 via-neutral-400 to-slate-300 bg-clip-text text-transparent">
-                {Data.Heading}
+                {Data?.Heding}
               </h2>
               <div className="text-gray-400 text-lg lg:text-lg sm:text-base md:text-lg leading-relaxed max-w-3xl mb-6 mx-auto md:mx-0 font-[textFont] ">
-                {Data.Description}
+                {Data?.Description}
               </div>
-              {/* <button className="font-[textFont] lg:text-fs-15 font-medium px-4 py-2  text-white border rounded-full transition-all duration-300 hover:bg-white hove:text-black hover:text-black">
-                More About Us
-                <i className="fas fa-arrow-right text-sm pl-2"></i>
-              </button> */}
             </div>
           </div>
         </div>
@@ -86,26 +93,27 @@ export default function AboutSection() {
         <div ref={statsRef} className="space-y-12 lg:px-56 max-auto">
           <StatItem
             id="experience-stat"
-            value={Data?.Experience || 0}
+            value={Data?.experience || 0}
             suffix=" +"
             label="Years of Experience"
             shouldAnimate={shouldAnimateStats}
+            style={{ width: "52%" }}
           />
           <StatItem
             id="projects-stat"
-            value={Data?.Projects || 0}
+            value={Data?.project || 0}
             suffix=" +"
             label="Successful Projects"
             shouldAnimate={shouldAnimateStats}
+
           />
           <StatItem
             id="satisfaction-stat"
-            value={Data?.Satisfaction || 0}
-            suffix=" %"
-            label="Client Satisfaction"
+            value={Data?.satisfaction || 0}
+            suffix="%"
+            label="Excellence Delivered"
             shouldAnimate={shouldAnimateStats}
           />
-
         </div>
       </div>
     </section>

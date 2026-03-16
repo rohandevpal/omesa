@@ -1,77 +1,66 @@
-import { useAirtable } from "../Context/AirTableContext";
 import { useState, useEffect } from "react";
-
-//Company data
-const trustedCompanies = [
-  {
-    id: 1,
-    name: "Company One",
-    logo: "/Clients/Omesa_Clients1.png"
-  },
-  {
-    id: 2,
-    name: "Company Two",
-    logo: "/Clients/Omesa_Client2.png"
-  },
-
-  {
-    id: 3,
-    name: "Company Four",
-    logo: "/Clients/Omesa_Client4.png"
-  },
-  {
-    id: 4,
-    name: "Company Five",
-    logo: "/Clients/Omesa_Client5.png"
-  },
-  {
-    id: 5,
-    name: "Company Six",
-    logo: "/Clients/Omesa_Client6.png"
-  },
-  {
-    id: 6,
-    name: "Company Seven",
-    logo: "/Clients/Omesa_Client7.png"
-  },
-  {
-    id: 7,
-    name: "Company Seven",
-    logo: "/Clients/Omesa_Client8.png"
-  },
-  {
-    id: 8,
-    name: "Company Seven",
-    logo: "/Clients/Omesa_Client9.png"
-  },
-  {
-    id: 9,
-    name: "Company Seven",
-    logo: "/Clients/Omesa_Client10.png"
-  }
-];
+import axios from "axios";
 
 export default function ClientSlider() {
-  const { getTableData } = useAirtable();
-  const [Logo, setLogo] = useState([]);
+  const [logos, setLogos] = useState([]);
 
-  // Fetch Airtable data
+  const tableId = "m382v6jmtock4gv";
+  const token = import.meta.env.VITE_NOCODB_ACCESS_TOKEN;
+
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getTableData("clientsLogo");
-      const formatted = data.map((record) => ({
-        id: record.id,
-        ...record.fields
-      }));
-      // Sort by number
+      const url = `https://app.nocodb.com/api/v2/tables/${tableId}/records`;
+      try {
+        const res = await axios.get(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      setLogo(formatted);
-    
+        console.log("🔍 Raw API Response:", res.data);
+
+        const list = res?.data?.list;
+        if (!list || !Array.isArray(list)) {
+          console.error("⚠️ 'list' missing or not an array:", res.data);
+          return;
+        }
+
+        const formatted = list.map((row) => {
+          // defensive extraction of name
+          const name = row?.logoname || row?.name || "client";
+
+          // row.logoImage can be:
+          // - an array of file objects: [{ signedUrl: '...', url: '...' }, ...]
+          // - a single object: { signedUrl: '...' }
+          // - sometimes a string (rare)
+          let logo = "";
+
+          if (Array.isArray(row?.logoImage) && row.logoImage.length > 0) {
+            const first = row.logoImage[0];
+            logo = first?.signedUrl || first?.url || "";
+          } else if (row?.logoImage && typeof row.logoImage === "object") {
+            logo = row.logoImage?.signedUrl || row.logoImage?.url || "";
+          } else if (typeof row?.logoImage === "string") {
+            logo = row.logoImage;
+          }
+
+          return {
+            id: row?.Id ?? row?.id ?? Math.random().toString(36).slice(2, 9),
+            name,
+            logo,
+          };
+        });
+
+        console.log("✨ Formatted logos:", formatted);
+        setLogos(formatted);
+      } catch (error) {
+        console.error("❌ Failed to fetch logos:", error);
+      }
     };
-    fetchData();
-  }, [getTableData]);
 
-  const extendedCompanies = [...trustedCompanies, ...trustedCompanies]; // Duplicate for loop
+    fetchData();
+  }, [tableId, token]);
+
+  // Duplicate for marquee effect
+  const extendedCompanies = [...logos, ...logos];
 
   return (
     <div className="w-full bg-[#010616] py-16 overflow-hidden">
@@ -81,16 +70,23 @@ export default function ClientSlider() {
         </h2>
 
         <div className="relative overflow-hidden">
-          {/* Marquee wrapper */}
           <div className="marquee-track">
             <div className="marquee-content">
               {extendedCompanies.map((company, index) => (
                 <div key={`${company.id}-${index}`} className="logo-item">
-                  <img
-                    src={company.logo}
-                    alt={`${company.name} logo`}
-                    className="h-12 w-auto object-contain opacity-80 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0"
-                  />
+                  {company.logo ? (
+                    <img
+                      src={company.logo}
+                      alt={`${company.name} logo`}
+                      className="h-12 w-auto object-contain opacity-80 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0"
+                      onError={(e) => {
+                        // hide broken images
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <span className="text-gray-400 text-sm">{company.name}</span>
+                  )}
                 </div>
               ))}
             </div>
@@ -98,34 +94,37 @@ export default function ClientSlider() {
         </div>
       </div>
 
-      {/* Custom CSS */}
       <style>{`
-      .marquee-track {
-        overflow: hidden;
-        position: relative;
-        width: 100%;
-      }
-      .marquee-content {
-        display: flex;
-        gap: 3rem;
-        width: max-content;
-        animation: scroll-marquee 27s linear infinite;
-      }
-      .logo-item {
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      @keyframes scroll-marquee {
-        0% {
-          transform: translateX(0);
+        .marquee-track {
+          overflow: hidden;
+          position: relative;
+          width: 100%;
         }
-        100% {
-          transform: translateX(-50%);
+
+        .marquee-content {
+          display: flex;
+          gap: 2rem;
+          width: max-content;
+          animation: scroll-marquee 40s linear infinite;
         }
-      }
-    `}</style>
+
+        .logo-item {
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 150px;
+        }
+
+        @keyframes scroll-marquee {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+      `}</style>
     </div>
   );
 }

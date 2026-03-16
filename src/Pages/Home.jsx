@@ -41,7 +41,7 @@ const Home = () => {
         </div>
 
         <ClientsSlider />
-        <RecentProjects />
+        <RecentProjects  limit={4}/>
         {/* <Testimonials /> */}
         <TrustedClients></TrustedClients>
         <ServicesSection />

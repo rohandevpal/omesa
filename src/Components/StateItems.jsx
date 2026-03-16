@@ -33,7 +33,7 @@ export function StatItem({ value, suffix, label, shouldAnimate, width = "w-full"
   
     return (
         <div className="mb-12">
-          <div className="flex justify-between items-start">
+          <div className="flex justify-between items-center">
             <div className="text-5xl md:text-6xl font-sans font-medium text-white flex">
               {currentValue}
               {suffix}

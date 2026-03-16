@@ -16,7 +16,6 @@ export default function Footer() {
             </div>
           </div>
         </div>
-
         {/* Middle Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* Logo and Social */}
@@ -32,7 +31,62 @@ export default function Footer() {
               </p>
             </div>
             <div className="text-center lg:text-left">
-              <p className="mb-4 text-gray-400 font-[textFont]">
+              {/* <p className="mb-4 text-gray-400 font-[textFont]">
+                Stay inspired. Follow us here
+              </p>
+              <div className="flex justify-center lg:justify-start space-x-4">
+                <a
+                  href="https://www.instagram.com/omesa_marketing/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-gray-400 transition-colors"
+                >
+                  <i className="fab fa-instagram text-xl"></i>
+                </a>
+                <a
+                  href="https://www.facebook.com/OmesaMarketing"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-gray-400 transition-colors"
+                >
+                  <i className="fab fa-facebook text-xl"></i>
+                </a>
+                <a
+                  href="https://www.linkedin.com/company/omesa-marketing-pvt-ltd/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-gray-400 transition-colors"
+                >
+                  <i className="fab fa-linkedin text-xl"></i>
+                </a>
+              </div> */}
+            </div>
+          </div>
+
+          {/* Quick links */}
+          <div className="grid grid-cols-2 gap-10 text-center sm:text-left">
+            <div>
+              <h4 className="text-lg sm:text-xl font-[heading] mb-6">Quick Links</h4>
+              <ul className="space-y-4">
+                <li>
+                  <Link to="/about" className="hover:text-gray-400 transition-colors">
+                    About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/contact" className="hover:text-gray-400 transition-colors">
+                    Contact Us
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/services" className="hover:text-gray-400 transition-colors">
+                    Services
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+            <p className="mb-4 text-gray-400 font-[textFont]">
                 Stay inspired. Follow us here
               </p>
               <div className="flex justify-center lg:justify-start space-x-4">
@@ -63,42 +117,7 @@ export default function Footer() {
               </div>
             </div>
           </div>
-
-          {/* Quick links */}
-          <div className="grid grid-cols-2 gap-10 text-center sm:text-left">
-            <div>
-              <h4 className="text-lg sm:text-xl font-[heading] mb-6">Quick Links</h4>
-              <ul className="space-y-4">
-                <li>
-                  <Link to="/about" className="hover:text-gray-400 transition-colors">
-                    About Us
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/contact" className="hover:text-gray-400 transition-colors">
-                    Contact Us
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/services" className="hover:text-gray-400 transition-colors">
-                    Services
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-lg sm:text-xl font-[heading] mb-6">Pages</h4>
-              <ul className="space-y-4">
-                <li>
-                  <Link to="/portfolio" className="hover:text-gray-400 transition-colors">
-                    Portfolio
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
         </div>
-
         {/* Footer Bottom */}
         <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-gray-800 gap-4">
           <p className="text-gray-400 text-sm text-center md:text-left font-[textFont]">

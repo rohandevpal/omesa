@@ -26,7 +26,7 @@ export default function WhyChooseUs() {
         {/* Card */}
         <div
           className="w-full h-auto p-6 border-2 border-[#FFFFFF73] rounded-2xl bg-cover bg-center bg-no-repeat flex flex-col"
-          style={{ backgroundImage: "url('/backgroundImages/WhyChoose.jpeg')" }}
+          style={{ backgroundImage: "url('/backgroundImages/WhyChoose.jpeg')",height:"95%"  }}
         >
           <i className="fas fa-lightbulb text-white text-3xl sm:text-4xl mb-6"></i>
           <h3 className="font-[HeadingFont] font-semibold text-lg sm:text-xl text-white mb-3">
@@ -59,7 +59,7 @@ export default function WhyChooseUs() {
 
         <div
           className="w-full h-auto p-6 border-2 border-[#FFFFFF73] rounded-2xl bg-cover bg-center bg-no-repeat flex flex-col"
-          style={{ backgroundImage: "url('/backgroundImages/WhyChoose.jpeg')" }}
+          style={{ backgroundImage: "url('/backgroundImages/WhyChoose.jpeg')", height:"95%" }}
         >
           <i className="fas fa-vr-cardboard text-white text-3xl sm:text-4xl mb-6"></i>
           <h3 className="font-[HeadingFont] font-semibold text-lg sm:text-xl text-white mb-3">

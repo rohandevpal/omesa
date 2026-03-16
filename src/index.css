@@ -45,3 +45,35 @@ body {
     width: 200px;
     height: 100px;
 }
+
+.space-y-12 > .mb-12:nth-child(2) {
+  width: 72%;
+}
+
+.space-y-12 > .mb-12:first-child {
+  width: 51%;
+}
+
+h1#HeadingBanner {
+  text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.6);
+}
+
+.main-case-detail p {
+  text-align: justify;
+  font-size: 16px;
+  line-height: 20px;
+}
+
+.bg-pink-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(26 73 162);
+}
+
+@layer base {
+  #caseStudyMain p {
+
+    font-family: textFont;
+    font-size: 18px;
+    line-height: 1.8rem;
+  }
+}
