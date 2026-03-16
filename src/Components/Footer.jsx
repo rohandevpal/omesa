@@ -1,6 +1,47 @@
+
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function Footer() {
+  const [logos, setLogos] = useState([]);
+
+  const tableId = "m382v6jmtock4gv";
+  const token = import.meta.env.VITE_NOCODB_ACCESS_TOKEN;
+
+  useEffect(() => {
+    const fetchLogos = async () => {
+      try {
+        const res = await axios.get(
+          `https://app.nocodb.com/api/v2/tables/${tableId}/records?limit=3`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const list = res?.data?.list || [];
+
+        const formatted = list.map((row) => {
+          let logo = "";
+
+          if (Array.isArray(row?.logoImage) && row.logoImage.length > 0) {
+            logo = row.logoImage[0]?.signedUrl || row.logoImage[0]?.url;
+          } else if (row?.logoImage?.signedUrl) {
+            logo = row.logoImage.signedUrl;
+          }
+
+          return logo;
+        });
+
+        setLogos(formatted.filter(Boolean));
+      } catch (err) {
+        console.error("Footer logos error:", err);
+      }
+    };
+
+    fetchLogos();
+  }, []);
+
   return (
     <footer className="bg-gradient-to-t from-[#090D18] via-[#14161C] to-[#18191D] text-white xl:py-16 px-4 sm:px-8 md:px-12 lg:px-20 transition-opacity duration-700">
       <div className="container mx-auto">
@@ -11,11 +52,14 @@ export default function Footer() {
               Ready to create something extraordinary with us?
             </h2>
 
-            <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 flex items-center justify-center rounded-full border border-gray-600 transition-all duration-300 cursor-pointer hover:rotate-[-45deg] mx-auto md:mx-0">
-              <i className="fa solid fa-arrow-right text-white text-3xl sm:text-4xl transition-transform duration-300"></i>
-            </div>
+            <Link to="/contact">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 flex items-center justify-center rounded-full border border-gray-600 transition-all duration-300 cursor-pointer hover:rotate-[-45deg] mx-auto md:mx-0">
+                <i className="fa solid fa-arrow-right text-white text-3xl sm:text-4xl transition-transform duration-300"></i>
+              </div>
+            </Link>
           </div>
         </div>
+
         {/* Middle Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* Logo and Social */}
@@ -30,63 +74,58 @@ export default function Footer() {
                 Making creativity tangible. Making brands unforgettable.
               </p>
             </div>
+
+            {/* NocoDB Logos */}
             <div className="text-center lg:text-left">
-              {/* <p className="mb-4 text-gray-400 font-[textFont]">
-                Stay inspired. Follow us here
-              </p>
-              <div className="flex justify-center lg:justify-start space-x-4">
-                <a
-                  href="https://www.instagram.com/omesa_marketing/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:text-gray-400 transition-colors"
-                >
-                  <i className="fab fa-instagram text-xl"></i>
-                </a>
-                <a
-                  href="https://www.facebook.com/OmesaMarketing"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:text-gray-400 transition-colors"
-                >
-                  <i className="fab fa-facebook text-xl"></i>
-                </a>
-                <a
-                  href="https://www.linkedin.com/company/omesa-marketing-pvt-ltd/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:text-gray-400 transition-colors"
-                >
-                  <i className="fab fa-linkedin text-xl"></i>
-                </a>
-              </div> */}
+              <div className="flex justify-center lg:justify-start items-center gap-6 flex-wrap">
+                {logos.map((logo, index) => (
+                  <img
+                    key={index}
+                    src={logo}
+                    alt="client-logo"
+                    className="h-16 object-contain opacity-80 grayscale hover:grayscale-0 transition"
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Quick links */}
           <div className="grid grid-cols-2 gap-10 text-center sm:text-left">
             <div>
-              <h4 className="text-lg sm:text-xl font-[heading] mb-6">Quick Links</h4>
+              <h4 className="text-lg sm:text-xl font-[heading] mb-6">
+                Quick Links
+              </h4>
               <ul className="space-y-4">
                 <li>
-                  <Link to="/about" className="hover:text-gray-400 transition-colors">
+                  <Link
+                    to="/about"
+                    className="hover:text-gray-400 transition-colors"
+                  >
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link to="/contact" className="hover:text-gray-400 transition-colors">
+                  <Link
+                    to="/contact"
+                    className="hover:text-gray-400 transition-colors"
+                  >
                     Contact Us
                   </Link>
                 </li>
                 <li>
-                  <Link to="/services" className="hover:text-gray-400 transition-colors">
+                  <Link
+                    to="/services"
+                    className="hover:text-gray-400 transition-colors"
+                  >
                     Services
                   </Link>
                 </li>
               </ul>
             </div>
+
             <div>
-            <p className="mb-4 text-gray-400 font-[textFont]">
+              <p className="mb-4 text-gray-400 font-[textFont]">
                 Stay inspired. Follow us here
               </p>
               <div className="flex justify-center lg:justify-start space-x-4">
@@ -118,16 +157,23 @@ export default function Footer() {
             </div>
           </div>
         </div>
+
         {/* Footer Bottom */}
         <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-gray-800 gap-4">
           <p className="text-gray-400 text-sm text-center md:text-left font-[textFont]">
             Copyright © {new Date().getFullYear()}
           </p>
           <div className="flex space-x-6">
-            <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">
+            <a
+              href="#"
+              className="text-gray-400 hover:text-white text-sm transition-colors"
+            >
               Privacy Policy
             </a>
-            <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">
+            <a
+              href="#"
+              className="text-gray-400 hover:text-white text-sm transition-colors"
+            >
               Term & Services
             </a>
           </div>
@@ -136,3 +182,4 @@ export default function Footer() {
     </footer>
   );
 }
+
